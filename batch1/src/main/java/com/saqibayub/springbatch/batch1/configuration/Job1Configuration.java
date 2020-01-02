@@ -2,9 +2,13 @@ package com.saqibayub.springbatch.batch1.configuration;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.job.builder.SimpleJobBuilder;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,30 +18,89 @@ import org.springframework.context.annotation.Configuration;
 public class Job1Configuration {
 
 	@Autowired
-	private JobBuilderFactory jobBuilderFactory;
-	
+	private Job1TaskletTypeStep1 task1;
+	public static final String JOB_NAME="Job 1 Task 1";
 	@Autowired
 	private StepBuilderFactory stepBuilderFactory;
 	
-	@Bean("job1Step1")
-	public Step configureJob1Step1() {
-		
-		return stepBuilderFactory
-			.get("job1Step1")
-			.tasklet(new Job1Step1Tasklet1())
-			.build()
-			;
-			
-	}
+	
+	
+	@Autowired
+	private JobBuilderFactory jobBuilderFactory;
+	
 	@Bean("job1")
 	public Job configureJob1() {
 		
 		return jobBuilderFactory
-			.get("job1")
-			.start(configureJob1Step1())//FIXME
+			.get(JOB_NAME)
+			.start(task1.getStep())
 			.build()
 			;
 			
 	}
 	
+	@Bean("job2")
+	public Job job2TransitionJob() {
+		
+		return jobBuilderFactory
+			.get("job2TransitionJob")
+			.start(step1())
+			.next(step2())
+			.next(step3())
+			.build()
+			;
+	}
+	@Bean("job3")
+	public Job job3TransitionJob() {
+		
+		return getSimpleJobBuilder("job3TransitionJob").build();
+	}
+	
+	@Bean("job4")
+	public Job job4TransitionJob() {
+		
+		return getSimpleJobBuilder("job4TransitionJob").build();
+	}
+
+	private SimpleJobBuilder getSimpleJobBuilder(String jobName) {
+		
+		return jobBuilderFactory
+			.get(jobName)
+			.start(step1())
+			.next(step2())
+			.next(step3());
+	}
+
+	private Step step1() {
+		return stepBuilderFactory
+		.get("Step#1")
+		.tasklet((contribution, chunkContext) ->{
+			System.out.println("Job Step1 ");
+			return RepeatStatus.FINISHED;
+		})
+		.build()
+		;
+	}
+	
+	private Step step2() {
+		return stepBuilderFactory
+		.get("Step#2")
+		.tasklet((contribution, chunkContext) ->{
+			System.out.println("Job Step2 ");
+			return RepeatStatus.FINISHED;
+		})
+		.build()
+		;
+	}
+	
+	private Step step3() {
+		return stepBuilderFactory
+		.get("Step#3")
+		.tasklet((contribution, chunkContext) ->{
+			System.out.println("Job Step 3 ");
+			return RepeatStatus.FINISHED;
+		})
+		.build()
+		;
+	}	
 }
